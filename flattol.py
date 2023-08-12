@@ -5,10 +5,10 @@ from pathlib import Path
 from sys import argv, exi
 # SPDX-License-Identifier: GPL-3.0-only
 
-# TODO: Should test functions before writing anothter
+# TODO: Should test functions before writing another
 
 # Global variables
-VERSION_NUMBER="1.1.1"
+VERSION_NUMBER="1.4.0"
 OWNER="heliguy4599"
 REPO="flattool"
 
@@ -39,17 +39,11 @@ appID='' # TODO: Is this should global?
 def main():
     april_fools()
 
-def printerr(first_msg, *args):
-    print(ERROR_TXT + f"error: " + NORMAL_TXT) 
-    if len(args) > 0:
-        for arg in args:
-            print(f"\n{arg}")
+def printerr(msg):
+    print(f"{ERROR_TXT+'error'+NORMAL_TXT}: {msg}") 
 
 def print_bold(string):
     print(BOLD_TXT + string + NORMAL_TXT)
-
-def print_bold(string):
-    print(ERROR_TXT + string + NORMAL_TXT)
 
 # Haha, April Fools nerd
 def april_fools():
@@ -97,24 +91,20 @@ def check_arg_len(min_len, max_len):
         printerr(f"Internal program error: checkArgLength called with improper min or max values {argv[0]}")
         exit(1)
    
-    # Should remove this part, why would this function print something?
     if len(argv[1:]) < min_len or (max_len >= 0 and len(argv[1:]) > max_len):
         print_subcmd_help((argv[1]))
         exit(1)
 
-def trash_file(file_path):
-    # Note to heli: 
-    # Maybe we should add print statements to indicate if operation was succesful or not
-    # since we capturing both stdout and stderr. Or the question should be should we capture them at all?
-    if Path(file_path).exists():
+def trash_file(app_path):
+    if Path(app_path).exists():
         if not run(["which", "trash-put"], stdout=DEVNULL, stderr=STDOUT).returncode:
-            run(["trash-put", file_path])
+            run(["trash-put", app_path])
             return
         elif not run(["which", "gio"], stdout=DEVNULL, stderr=STDOUT).returncode:
-            run(["gio", "trash", file_path])
+            run(["gio", "trash", app_path])
             return
         else:
-            run(["rm", "-rf", f"{file_path}"])
+            run(["rm", "-rf", f"{app_path}"])
 
 def print_master_help():
     print("Usage: flattool <command>")
@@ -170,12 +160,8 @@ def print_subcmd_help(cmd):
             print("Subcommand does NOT exist!")
 
 # Main functions for the app
-# ====================================================================================
 def identify_by_query(query):
-    app = run(["flatpak", "list"])
-    if app:
-        exit(1)
-    return app
+    pass #TODO
 
 """
 identifyByQuery() {
@@ -187,17 +173,13 @@ identifyByQuery() {
     appID=$app
 }
 """
-
-"""
-searchApp() {
-    output=$(flatpak list | grep -i "$1")
-    if [ -z "$output" ]; then
-        printerr "No installed application found from query: '${boldTxt}${1}${normalTxt}'"
-        exit 1
-    fi
-    echo "$output"
-}
-"""
+def search(query):
+    output = sb.run(["flatpak", "list"], capture_output=True, text=True).stdout
+    results = [res for res in output.splitlines() if query.lower() in res.lower()]
+    if len(results) == 0:
+        printerr(f"No installed application found from query: '{BOLD_TXT+query+NORMAL_TXT}'")
+    for i in results:
+        print(i)
 
 """
 installApp() {
